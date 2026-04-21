@@ -1,19 +1,35 @@
-import { Page } from '@playwright/test';
-import { ROUTES } from '../utilities/constants';
+import test, { expect, Page } from '@playwright/test';
+import { User } from '../models/user';
+import { Constants } from '../utilities/constants';
+import { LoginLocators } from '../locators/login.locators';
+import { CommonPage } from './common-page';
+import { step } from '../utilities/logging';
 
-export class LoginPage {
-  constructor(private page: Page) {}
+export class LoginPage extends LoginLocators {
+  commonPage: CommonPage;
 
-  async login(email: string, password: string) {
-    await this.page.goto(ROUTES.login);
-    await this.page.waitForLoadState('domcontentloaded');
-    await this.page.fill('input[name="email"]', email);
-    await this.page.fill('input[name="password"]', password);
-    
-    // ✅ Dùng Promise.all để click và chờ navigation cùng lúc
-    await Promise.all([
-      this.page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-      this.page.click('input[type="submit"]'),
-    ]);
+  constructor(page: Page) {
+    super(page);
+    this.commonPage = new CommonPage(page);
+  }
+
+  @step('Login with user credentials')
+  async login(user: User) {
+    await test.step(`Login with email: ${user.email}`, async () => {
+      await this.inputEmail.fill(user.email);
+      await this.inputPassword.fill(user.password);
+
+      await Promise.all([
+        this.page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+        this.btnSubmit.click(),
+      ]);
+    });
+  }
+
+  @step('Verify successful login')
+  async expectSuccessfulLogin() {
+    await test.step('Verify redirected away from login page', async () => {
+      await expect(this.page).not.toHaveURL(/route=account\/login/);
+    });
   }
 }

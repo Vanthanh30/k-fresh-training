@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+const environment = process.env.ENV || 'qa';
+dotenv.config({ path: path.resolve(__dirname, `profiles/.env.${environment}`) });
 
 export default defineConfig({
   testDir: './tests',
@@ -9,14 +14,14 @@ export default defineConfig({
   reporter: 'html',
 
   use: {
-    baseURL: 'https://ecommerce-playground.lambdatest.io',
+    baseURL: process.env.BASE_URL,
     trace: 'on-first-retry',
     headless: false,
-    actionTimeout: 15000,  // ✅ Thêm
-    navigationTimeout: 30000, // ✅ Thêm
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
   },
 
-  timeout: 60000, // ✅ Tăng timeout toàn cục lên 60s
+  timeout: 60000,
 
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
