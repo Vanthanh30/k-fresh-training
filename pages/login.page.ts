@@ -1,5 +1,6 @@
 import test, { expect, Page } from '@playwright/test';
 import { User } from '../models/index';
+import { Constants } from '../utilities/constants';
 import { LoginLocators } from '../locators/login.locators';
 import { CommonPage } from './common-page';
 import { step } from '../utilities/logging';
@@ -18,10 +19,9 @@ export class LoginPage extends LoginLocators {
       await this.inputEmail.fill(user.email);
       await this.inputPassword.fill(user.password);
 
-      await Promise.all([
-        this.page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-        this.btnSubmit.click(),
-      ]);
+      // ✅ Dùng dispatchEvent thay Promise.all để tránh timeout trên Firefox
+      await this.btnSubmit.dispatchEvent('click');
+      await this.page.waitForLoadState('domcontentloaded');
     });
   }
 

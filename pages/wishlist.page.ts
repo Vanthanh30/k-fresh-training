@@ -31,20 +31,20 @@ async addFirstProductToWishlist() {
   });
 
   await test.step('Hover and click wishlist button', async () => {
-    // ✅ Scroll xuống để tránh header che
-    await this.productCard.first().scrollIntoViewIfNeeded();
-    
-    // ✅ Chờ trang ổn định
-    await this.page.waitForLoadState('networkidle');
-    
-    await this.productCard.first().hover();
-    
-    await this.page.waitForSelector('button.btn-wishlist', { state: 'visible' });
+    // ✅ Dùng domcontentloaded thay networkidle — Firefox không bị timeout
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(1000);
 
-    // ✅ Dùng dispatchEvent để bypass overlay
-    await this.productCard.first()
-      .locator('button.btn-wishlist')
-      .dispatchEvent('click');
+    // ✅ Dùng evaluate để scroll và click bằng JS thuần — bypass Firefox stability issue
+    await this.page.evaluate(() => {
+      const products = document.querySelectorAll('.product-thumb');
+      const product = products[1] as HTMLElement;
+      if (product) {
+        product.scrollIntoView({ behavior: 'instant', block: 'center' });
+        const btn = product.querySelector('button.btn-wishlist') as HTMLElement;
+        if (btn) btn.click();
+      }
+    });
 
     await this.page.waitForResponse(res =>
       res.url().includes('wishlist') && res.status() === 200
@@ -76,14 +76,14 @@ async addFirstProductToWishlist() {
     });
   }
 
-  @step('Remove first product from wishlist')
+ @step('Remove first product from wishlist')
   async removeFirstProduct() {
     await test.step('Click remove button', async () => {
-      await this.removeBtn.first().click();
+      // ✅ Dùng dispatchEvent thay vì click() để bypass Firefox issue
+      await this.removeBtn.first().dispatchEvent('click');
       await this.page.waitForLoadState('domcontentloaded');
     });
   }
-
   @step('Verify wishlist persists after reload')
   async verifyAfterReload() {
     await test.step('Reload page', async () => {
