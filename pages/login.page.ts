@@ -1,6 +1,5 @@
 import test, { expect, Page } from '@playwright/test';
-import { User } from '../models/user';
-import { Constants } from '../utilities/constants';
+import { User } from '../models/index';
 import { LoginLocators } from '../locators/login.locators';
 import { CommonPage } from './common-page';
 import { step } from '../utilities/logging';
